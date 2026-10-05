@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Modern Retail Store Network Simulator — Phase 2</title>
+<meta name="description" content="Interactive computer networks simulation for a modern retail store: Wi-Fi association, DNS resolution, HTTP communication, packet flow and performance analysis." />
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<!-- ==================== LEFT SIDEBAR (unchanged) ==================== -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar__brand">
+    <span class="sidebar__mark" aria-hidden="true">
+      <svg viewBox="0 0 24 24"><path d="M12 2 3 7v10l9 5 9-5V7l-9-5Z"/><path d="M12 7v10M3 7l9 5 9-5"/></svg>
+    </span>
+    <span class="sidebar__title">
+      <strong>Modern Retail Store</strong>
+      <span>Network Simulator</span>
+    </span>
+      
+  </div>
+
+  <nav class="sidenav" aria-label="Dashboard sections">
+    <button type="button" class="sidenav__link is-active" data-nav="overview"><span class="sidenav__icon">&#127968;</span>Network Overview</button>
+    <button type="button" class="sidenav__link" data-nav="devices"><span class="sidenav__icon">&#128187;</span>Devices</button>
+    <button type="button" class="sidenav__link" data-nav="wifi"><span class="sidenav__icon">&#128225;</span>Wi-Fi</button>
+    <button type="button" class="sidenav__link" data-nav="dns"><span class="sidenav__icon">&#127760;</span>DNS</button>
+    <button type="button" class="sidenav__link" data-nav="http"><span class="sidenav__icon">&#128279;</span>HTTP</button>
+    <button type="button" class="sidenav__link" data-nav="test"><span class="sidenav__icon">&#129514;</span>Network Test</button>
+    <button type="button" class="sidenav__link" data-nav="performance"><span class="sidenav__icon">&#128202;</span>Performance</button>
+    <button type="button" class="sidenav__link" data-nav="protocols"><span class="sidenav__icon">&#128218;</span>Protocols</button>
+  </nav>
+
+  <div class="sidebar__foot">
+    <span class="sidebar__foot-label">Network Status</span>
+    <span class="sidebar__foot-state" id="sidebarState"><span class="dot dot--ok"></span>Online</span>
+  </div>
+</aside>
+<div class="sidebar-backdrop" id="sidebarBackdrop" hidden></div>
+
+<!-- ==================== MAIN ==================== -->
+<div class="main">
+
+  <!-- ---------- TOP HEADER ---------- -->
+  <header class="topbar">
+    <button class="menu-btn" id="menuBtn" aria-label="Toggle navigation">&#9776;</button>
+    <div class="topbar__title">
+      <h1 id="pageTitle">Network Overview</h1>
+      <p id="pageSub">Retail Store Network Architecture</p>
+    </div>
+    <div class="topbar__right">
+      <span class="chip chip--state" id="headerState"><span class="dot dot--idle"></span>Idle</span>
+      <span class="chip chip--clock" id="headerClock">--:--:--</span>
+    </div>
+  </header>
+
+  <!-- ---------- VIEWS (only one visible at a time) ---------- -->
+  <main class="page" id="page">
+
+    <!-- ============ VIEW : NETWORK OVERVIEW ============ -->
+    <section class="view is-active" data-view="overview" aria-label="Network Overview">
+
+      <!-- main focus: architecture -->
+      <section class="card card--main">
+        <div class="section__head">
+          <h2>Network Architecture</h2>
+        </div>
+        <div class="diagram" id="diagram"><!-- built by script.js --></div>
+      </section>
+
+      <!-- compact monitoring strip -->
+      <div class="card card--strip">
+        <ul class="strip" id="statusList"><!-- injected --></ul>
+      </div>
+
+      <!-- supporting cards -->
+      <div class="view__row">
+        <section class="card">
+          <div class="section__head"><h2>Simulation Controls</h2></div>
+          <label class="field">
+            <span class="field__label">Active client</span>
+            <select id="clientSelect"><!-- options from script.js --></select>
+          </label>
+          <div class="controls">
+            <button class="btn btn--primary" id="btnStart">Start Simulation</button>
+            <button class="btn btn--ghost" id="btnPause">Pause</button>
+            <button class="btn btn--ghost" id="btnReset">Reset</button>
+            <button class="btn btn--ghost" id="btnTest">Test Communication</button>
+          </div>
+          <div class="controls__meta">
+            <span class="chip chip--state" id="simState"><span class="dot dot--idle"></span>Idle</span>
+            <span class="chip chip--clock">Elapsed <b id="simClock">00:00:00</b></span>
+          </div>
+          <p class="controls__result" id="controlResult" hidden>Connection Successful</p>
+        </section>
+
+        <section class="card">
+          <div class="section__head section__head--row">
+            <div class="head__group">
+              <h2>Activity Log</h2>
+              <span class="head__count" id="logCount">0 entries</span>
+            </div>
+            <button class="btn btn--ghost btn--mini" id="logClearBtn">Clear</button>
+          </div>
+          <ul class="log" id="logList" aria-live="polite"></ul>
+        </section>
+      </div>
+    </section>
+
+    <!-- ============ VIEW : DEVICES ============ -->
+    <section class="view" data-view="devices" aria-label="Devices" hidden>
+      <section class="card card--main">
+        <div class="section__head">
+          <h2>Connected Devices</h2>
+          <p class="section__sub" id="devicesSub">9 devices on the retail store network</p>
+        </div>
+        <div class="node-grid" id="deviceGrid"><!-- injected --></div>
+      </section>
+    </section>
+
+    <!-- ============ VIEW : WI-FI ============ -->
+    <section class="view" data-view="wifi" aria-label="Wi-Fi" hidden>
+      <div class="view__row view__row--aside">
+
+        <section class="card card--main">
+          <div class="section__head">
+            <h2>Wi-Fi Configuration</h2>
+            <p class="section__sub">SSID RetailStore_WiFi &middot; 2.4 GHz / 5 GHz</p>
+          </div>
+
+          <div class="wifi-head">
+            <span class="icon-box" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><path d="M12 20h.01"/></svg>
+            </span>
+            <span class="wifi-head__text">
+              <strong>RetailStore_WiFi</strong>
+              <small>Wireless access point 192.168.1.2</small>
+            </span>
+          </div>
+
+          <div class="card__actions">
+            <button class="btn btn--primary" id="wifiConnectBtn">Connect Wi-Fi</button>
+            <button class="btn btn--ghost" id="wifiDisconnectBtn">Disconnect</button>
+            <button class="btn btn--ghost" id="wifiDetailsBtn">Details</button>
+          </div>
+
+          <ol class="flow" id="wifiFlow">
+            <li class="flow__step" data-step="1"><span class="flow__index">1</span>
+              <div class="flow__body"><strong>Scanning for RetailStore_WiFi</strong><small>2.4 GHz and 5 GHz bands</small></div>
+              <span class="flow__state">waiting</span></li>
+            <li class="flow__step" data-step="2"><span class="flow__index">2</span>
+              <div class="flow__body"><strong>Access Point Found</strong><small>channel 6 &middot; strong signal</small></div>
+              <span class="flow__state">waiting</span></li>
+            <li class="flow__step" data-step="3"><span class="flow__index">3</span>
+              <div class="flow__body"><strong>Authenticating</strong><small>WPA2-PSK handshake</small></div>
+              <span class="flow__state">waiting</span></li>
+            <li class="flow__step" data-step="4"><span class="flow__index">4</span>
+              <div class="flow__body"><strong>Connected Successfully</strong><small>associated as wireless client</small></div>
+              <span class="flow__state">waiting</span></li>
+          </ol>
+        </section>
+
+        <div class="col">
+          <section class="card">
+            <div class="section__head"><h2>Connection Status</h2></div>
+            <div class="kv">
+              <div class="kv__row"><dt>SSID</dt><dd>RetailStore_WiFi</dd></div>
+              <div class="kv__row"><dt>Security</dt><dd>WPA2</dd></div>
+              <div class="kv__row"><dt>Signal Strength</dt><dd class="ok" id="wifiSignal">Strong</dd></div>
+              <div class="kv__row"><dt>Connected Devices</dt><dd id="wifiClientCount">4</dd></div>
+              <div class="kv__row"><dt>Status</dt><dd class="ok" id="wifiStatus">Connected</dd></div>
+            </div>
+          </section>
+
+          <section class="card">
+            <div class="section__head"><h2>Associated Devices</h2></div>
+            <ul class="assoc" id="assocList"><!-- injected --></ul>
+          </section>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ VIEW : DNS ============ -->
+    <section class="view" data-view="dns" aria-label="DNS" hidden>
+      <section class="card card--main card--narrow">
+        <div class="section__head">
+          <h2>DNS Resolution</h2>
+          <p class="section__sub">Domain name to IP address &middot; UDP port 53</p>
+        </div>
+
+        <div class="dns-input">
+          <label class="field">
+            <span class="field__label">Domain</span>
+            <input type="text" id="dnsInput" value="www.retailstore.com" spellcheck="false"
+                   list="dnsRecords" placeholder="www.retailstore.com" />
+          </label>
+          <datalist id="dnsRecords">
+            <option value="www.retailstore.com"></option>
+            <option value="pos.retailstore.com"></option>
+            <option value="api.retailstore.com"></option>
+          </datalist>
+          <button class="btn btn--primary" id="dnsResolveBtn">Resolve DNS</button>
+        </div>
+
+        <ol class="track" id="dnsFlow">
+          <li class="track__step" data-step="1"><span class="track__index">1</span>
+            <div class="track__body"><strong>Domain</strong><small>name entered by client</small></div>
+            <span class="track__state">waiting</span></li>
+          <li class="track__step" data-step="2"><span class="track__index">2</span>
+            <div class="track__body"><strong>DNS Request</strong><small>query sent over UDP/53</small></div>
+            <span class="track__state">waiting</span></li>
+          <li class="track__step" data-step="3"><span class="track__index">3</span>
+            <div class="track__body"><strong>DNS Server</strong><small>192.168.1.10 looks up record</small></div>
+            <span class="track__state">waiting</span></li>
+          <li class="track__step" data-step="4"><span class="track__index">4</span>
+            <div class="track__body"><strong>Resolved IP</strong><small>answer returned to client</small></div>
+            <span class="track__state">waiting</span></li>
+        </ol>
+
+        <div class="result" id="dnsResultBox">
+          <div class="result__row"><span class="result__label">Domain</span><span class="result__value" id="dnsDomain">www.retailstore.com</span></div>
+          <div class="result__row"><span class="result__label">Resolved IP</span><span class="result__value" id="dnsIp">&mdash;</span></div>
+          <div class="result__row"><span class="result__label">DNS Status</span><span class="result__value" id="dnsStatus">Idle</span></div>
+        </div>
+      </section>
+    </section>
+
+    <!-- ============ VIEW : HTTP ============ -->
+    <section class="view" data-view="http" aria-label="HTTP" hidden>
+      <section class="card card--main">
+        <div class="section__head">
+          <h2>HTTP Communication</h2>
+          <p class="section__sub">Request and response over TCP port 80</p>
+        </div>
+
+        <ol class="track" id="httpFlow">
+          <li class="track__step" data-step="1"><span class="track__index">1</span>
+            <div class="track__body"><strong>Client</strong><small>builds the request</small></div>
+            <span class="track__state">waiting</span></li>
+          <li class="track__step" data-step="2"><span class="track__index">2</span>
+            <div class="track__body"><strong>HTTP Request</strong><small>GET / via router 192.168.1.1</small></div>
+            <span class="track__state">waiting</span></li>
+          <li class="track__step" data-step="3"><span class="track__index">3</span>
+            <div class="track__body"><strong>Web Server</strong><small>192.168.1.20 prepares response</small></div>
+            <span class="track__state">waiting</span></li>
+          <li class="track__step" data-step="4"><span class="track__index">4</span>
+            <div class="track__body"><strong>HTTP Response</strong><small>200 OK to the client</small></div>
+            <span class="track__state">waiting</span></li>
+        </ol>
+
+        <div class="kv kv--boxed">
+          <div class="kv__row"><dt>Method</dt><dd>GET</dd></div>
+          <div class="kv__row"><dt>URL</dt><dd id="httpUrl">http://www.retailstore.com/</dd></div>
+          <div class="kv__row"><dt>Protocol</dt><dd>HTTP/1.1</dd></div>
+          <div class="kv__row"><dt>Server Status</dt><dd id="httpStatus">Idle</dd></div>
+          <div class="kv__row"><dt>Status Code</dt><dd id="httpCode">&mdash;</dd></div>
+          <div class="kv__row"><dt>Response Time</dt><dd id="httpTime">&mdash;</dd></div>
+        </div>
+
+        <div class="card__actions">
+          <button class="btn btn--primary" id="httpSendBtn">Send HTTP Request</button>
+          <button class="btn btn--ghost" id="httpClearBtn">Clear</button>
+        </div>
+
+        <div class="console" id="httpConsole">
+          <div class="console__empty">Communication log empty &mdash; click <strong>Send HTTP Request</strong> to trace an exchange.</div>
+        </div>
+      </section>
+    </section>
+
+    <!-- ============ VIEW : NETWORK TEST ============ -->
+    <section class="view" data-view="test" aria-label="Network Test" hidden>
+      <div class="view__row view__row--aside">
+
+        <section class="card card--main">
+          <div class="section__head">
+            <h2>Test Communication</h2>
+            <p class="section__sub">Client to router, DNS, HTTP and Internet</p>
+          </div>
+
+          <div class="test-head">
+            <span class="test-head__label">Testing from</span>
+            <span class="test-head__client" id="testClientName">Customer Laptop (192.168.1.101)</span>
+          </div>
+
+          <div class="card__actions">
+            <button class="btn btn--primary" id="testCommBtn">Test Communication</button>
+            <span class="chip chip--meta" id="testChip">Not tested</span>
+          </div>
+
+          <ul class="test-list" id="testResults">
+            <li class="test-list__row" data-target="router">
+              <span class="test-list__name">Router Connection</span>
+              <span class="test-list__state" data-state="idle">Waiting</span></li>
+            <li class="test-list__row" data-target="dns">
+              <span class="test-list__name">DNS Connection</span>
+              <span class="test-list__state" data-state="idle">Waiting</span></li>
+            <li class="test-list__row" data-target="http">
+              <span class="test-list__name">HTTP Connection</span>
+              <span class="test-list__state" data-state="idle">Waiting</span></li>
+            <li class="test-list__row" data-target="internet">
+              <span class="test-list__name">Internet Connection</span>
+              <span class="test-list__state" data-state="idle">Waiting</span></li>
+          </ul>
+        </section>
+
+        <section class="card">
+          <div class="section__head">
+            <h2>Complete Simulation Demo</h2>
+            <p class="section__sub">Wi-Fi &rarr; DNS &rarr; HTTP &rarr; Performance</p>
+          </div>
+          <div class="card__actions">
+            <button class="btn btn--success" id="demoBtn">Run Demo</button>
+            <span class="chip chip--meta" id="demoChip">Idle</span>
+          </div>
+
+          <ol class="steps" id="demoSteps"><!-- injected --></ol>
+
+          <div class="banner" id="demoBanner" hidden>
+            <span class="banner__tick">&#10003;</span>
+            <span>Complete Network Simulation Successful</span>
+          </div>
+        </section>
+      </div>
+    </section>
+
+    <!-- ============ VIEW : PERFORMANCE ============ -->
+    <section class="view" data-view="performance" aria-label="Performance" hidden>
+      <div class="view__row view__row--aside">
+
+        <section class="card">
+          <div class="section__head">
+            <h2>Performance Summary</h2>
+          </div>
+
+          <div class="metrics">
+            <div class="metric"><span class="metric__label">Latency</span><span class="metric__value" id="perfLatency">&mdash;</span></div>
+            <div class="metric"><span class="metric__label">Response Time</span><span class="metric__value" id="perfResponse">&mdash;</span></div>
+            <div class="metric"><span class="metric__label">Packet Loss</span><span class="metric__value" id="perfLoss">&mdash;</span></div>
+            <div class="metric"><span class="metric__label">Success Rate</span><span class="metric__value" id="perfSuccessRate">&mdash;</span></div>
+            <div class="metric"><span class="metric__label">Packets Sent</span><span class="metric__value" id="perfSent">0</span></div>
+            <div class="metric"><span class="metric__label">Packets Received</span><span class="metric__value" id="perfReceived">0</span></div>
+          </div>
+
+          <div class="loss-control">
+            <span class="field__label">Packet Loss Probability</span>
+            <div class="seg" id="lossSeg">
+              <button type="button" class="seg__btn is-active" data-loss="0">0%</button>
+              <button type="button" class="seg__btn" data-loss="5">5%</button>
+              <button type="button" class="seg__btn" data-loss="10">10%</button>
+              <button type="button" class="seg__btn" data-loss="20">20%</button>
+            </div>
+          </div>
+
+          <div class="card__actions">
+            <button class="btn btn--primary" id="perfTestBtn">Run Test</button>
+            <span class="chip chip--meta" id="perfChip">Not tested</span>
+          </div>
+        </section>
+
+        <section class="card card--main">
+          <div class="section__head section__head--row">
+            <h2>Network Performance</h2>
+            <span class="chart-legend">
+              <i class="swatch swatch--lan"></i>Latency
+              <i class="swatch swatch--dns"></i>DNS
+              <i class="swatch swatch--req"></i>HTTP
+            </span>
+          </div>
+          <div class="chart-wrap"><canvas id="perfChart"></canvas></div>
+        </section>
+      </div>
+    </section>
+
+    <!-- ============ VIEW : PROTOCOLS ============ -->
+    <section class="view" data-view="protocols" aria-label="Protocols" hidden>
+      <section class="card card--main">
+        <div class="section__head">
+          <h2>Protocol Information</h2>
+          <p class="section__sub">Role of each protocol in the store network</p>
+        </div>
+        <div class="protocol-grid">
+          <div class="protocol-card">
+            <span class="icon-box icon-box--wifi" id="protoWifi"></span>
+            <strong>Wi-Fi</strong>
+            <p>Wireless link between user devices and the access point.</p>
+          </div>
+          <div class="protocol-card">
+            <span class="icon-box icon-box--dns" id="protoDns"></span>
+            <strong>DNS</strong>
+            <p>Converts a domain name into an IP address for the client.</p>
+          </div>
+          <div class="protocol-card">
+            <span class="icon-box icon-box--http" id="protoHttp"></span>
+            <strong>HTTP</strong>
+            <p>Used to request and receive web pages from the web server.</p>
+          </div>
+          <div class="protocol-card">
+            <span class="icon-box icon-box--router" id="protoRouter"></span>
+            <strong>Router</strong>
+            <p>Forwards packets between networks and assigns addresses.</p>
+          </div>
+          <div class="protocol-card">
+            <span class="icon-box icon-box--ip" id="protoIp"></span>
+            <strong>IP</strong>
+            <p>Gives every device an address so packets reach the right host.</p>
+          </div>
+        </div>
+      </section>
+    </section>
+
+  </main>
+  </div>
+
+<!-- ==================== MODAL ==================== -->
+<div class="modal" id="modal" hidden>
+  <div class="modal__backdrop" data-close></div>
+  <div class="modal__box" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modal__head">
+      <h3 id="modalTitle">Details</h3>
+      <button class="modal__close" id="modalClose" aria-label="Close">&times;</button>
+    </div>
+    <div class="modal__body" id="modalBody"></div>
+  </div>
+</div>
+
+<!-- ==================== TOAST ==================== -->
+<div class="toast" id="toast" hidden></div>
+
+<script src="script.js"></script>
+</body>
+</html>
